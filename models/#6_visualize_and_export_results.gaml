@@ -9,6 +9,7 @@ model GrazingCows
 /* Insert your model definition here */
 global {
 	float total_available_grass;
+	list<float> available_grass_list <- [];
 	float total_grass_eaten;
 	int total_cow <- 12;
 	float mean_biomass;
@@ -32,8 +33,7 @@ global {
 	geometry cleaned_2023_polygon <- geometry(cleaned_2023_file);
 	geometry grassland <- geometry(hirschanger_file + meadow_file + cleaned_2020_file + cleaned_2021_file + cleaned_2022_file + cleaned_2023_file);
 	geometry shape <- envelope(vierkaser_file);
-	
-	
+
 	init {
 		create vierkher from: [vierkaser_polygon];
 		create hirschanger from: [hirschanger_polygon];
@@ -46,84 +46,100 @@ global {
 			location <- any_location_in(grassland);
 		}
 
-// 		grassland_cells <- grass where (location intersects grassland);
-// 		
-		list<float> biomass_values <- [];
-        loop g over: grass {
-			bool is_pasture <- g intersects (grassland);
-			if is_pasture {
-				biomass_values <- biomass_values + [g.biomass];
-			}
-		}
-		write length(biomass_values);
-		
-        mean_biomass <- mean(biomass_values);
-        min_biomass <- min(biomass_values);
-        max_biomass <- max(biomass_values);
-        
-        write min_biomass;
-	}
-	
-	reflex update_mean_biomass_value {
-		total_grass_eaten<-0.0;
-		total_available_grass<-0.0;
+		// 		grassland_cells <- grass where (location intersects grassland);
+		// 		
 		list<float> biomass_values <- [];
 		loop g over: grass {
 			bool is_pasture <- g intersects (grassland);
 			if is_pasture {
 				biomass_values <- biomass_values + [g.biomass];
 			}
-		}
-		
-		mean_biomass <- mean(biomass_values);
-        min_biomass <- min(biomass_values);
-        max_biomass <- max(biomass_values);
-        write min_biomass;
-	
-}
-}
 
+		}
+
+		write length(biomass_values);
+		mean_biomass <- mean(biomass_values);
+		min_biomass <- min(biomass_values);
+		max_biomass <- max(biomass_values);
+		write min_biomass;
+	}
+
+	reflex update_mean_biomass_value {
+		total_grass_eaten <- 0.0;
+		total_available_grass <- 0.0;
+		list<float> biomass_values <- [];
+		loop g over: grass {
+			bool is_pasture <- g intersects (grassland);
+			if is_pasture {
+				biomass_values <- biomass_values + [g.biomass];
+			}
+
+		}
+
+		mean_biomass <- mean(biomass_values);
+		min_biomass <- min(biomass_values);
+		max_biomass <- max(biomass_values);
+		//        write min_biomass;
+		write length(available_grass_list);
+		available_grass_list <- [];
+	}
+
+}
 
 species vierkher {
+
 	aspect vierkher_polygon_aspect {
 		draw vierkaser_polygon color: #white border: #black;
 	}
+
 }
 
 species hirschanger {
+
 	aspect hirschanger_polygon_aspect {
 		draw hirschanger_polygon color: #green border: #black;
 	}
+
 }
 
 species meadow {
+
 	aspect meadow_polygon_aspect {
 		draw meadow_polygon color: #blue border: #black;
 	}
+
 }
 
 species cleaned_2020 {
+
 	aspect cleaned_2020_polygon_aspect {
 		draw cleaned_2020_polygon color: #yellow border: #black;
 	}
+
 }
 
 species cleaned_2021 {
+
 	aspect cleaned_2021_polygon_aspect {
 		draw cleaned_2021_polygon color: #orange border: #black;
 	}
+
 }
 
 species cleaned_2022 {
+
 	aspect cleaned_2022_polygon_aspect {
 		draw cleaned_2022_polygon color: #purple border: #black;
 	}
+
 }
 
 species cleaned_2023 {
+
 	aspect cleaned_2023_polygon_aspect {
 		draw cleaned_2023_polygon color: #grey border: #black;
 	}
+
 }
 
 species cows skills: [moving] {
@@ -141,9 +157,9 @@ species cows skills: [moving] {
 
 	reflex cow_graze {
 		list<grass> my_grasses <- grass intersecting (cow_action_area);
-		
-//		list<float> biomass_values <- [];
-		
+
+		//		list<float> biomass_values <- [];
+
 		//finding best spot to graze
 		float max_biomass <- 0.0;
 		grass my_grass;
@@ -152,15 +168,17 @@ species cows skills: [moving] {
 				my_grass <- i;
 				max_biomass <- i.biomass;
 			}
+
 		}
 
 		ask my_grasses {
 			if biomass > 0 {
-				total_available_grass <- total_available_grass+ biomass;
+				add biomass to: available_grass_list;
+				//				total_available_grass <- total_available_grass+ biomass;
 				biomass <- biomass - 0.1; //biomass is a grid variable in this example
-				total_grass_eaten <- total_grass_eaten+0.1;
+				total_grass_eaten <- total_grass_eaten + 0.1;
 			}
-			
+
 		}
 
 	}
@@ -175,7 +193,7 @@ species cows skills: [moving] {
 
 }
 
-grid grass cell_width: 5 cell_height: 5 {
+grid grass cell_width: 50 cell_height: 50 {
 //declare variables
 	float biomass;
 	bool is_pasture <- self intersects (grassland);
@@ -193,15 +211,12 @@ grid grass cell_width: 5 cell_height: 5 {
 			biomass <- 3.5;
 		} else if is_cutback_2021_23 {
 			biomass <- 3.0;
-		} 
-		else {
+		} else {
 			biomass <- 0.0;
-		}
-	}
+		} }
 
 		//grass growth
 	reflex grow when: is_pasture {
-
 		if (is_meadow and biomass < 6.1) or (is_cutback_2020 and biomass < 7.1) or (is_cutback_2021_23 and biomass < 6.1) or (is_hirschanger and biomass < 4.1) {
 			biomass <- biomass + 0.1;
 		}
@@ -214,66 +229,58 @@ grid grass cell_width: 5 cell_height: 5 {
 		} else {
 		//			draw square(5) color: rgb(0, int(biomass * 40), 0) border: rgb(0, int(biomass * 40), 0);
 			draw square(5) color: rgb(0, 255 - int(biomass * 20), 0) border: rgb(0, 255 - int(biomass * 20), 0);
-//			draw square(5) color: rgb(0, 255 - int(60 * 2), 0) border: rgb(0, 255 - int(60 * 2), 0);
+			//			draw square(5) color: rgb(0, 255 - int(60 * 2), 0) border: rgb(0, 255 - int(60 * 2), 0);
 		}
 
 	} }
 
 experiment main_experiment type: gui {
-	
+
+	reflex save_data {
+		save [cycle, mean_biomass, min_biomass, max_biomass] to: "../results/results.csv" format:"csv" rewrite: false header: true;
+	}
+
 	output {
-		display map {
-//			species vierkher aspect: vierkher_polygon_aspect;
-					
-//					species hirschanger aspect: hirschanger_polygon_aspect;
-//					species meadow aspect: meadow_polygon_aspect;
-//					species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
-//					species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
-//					species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
-//					species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
-			
+		display map_2d {
+			species vierkher aspect: vierkher_polygon_aspect;
+			species hirschanger aspect: hirschanger_polygon_aspect;
+			species meadow aspect: meadow_polygon_aspect;
+			species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
+			species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
+			species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
+			species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
 			species grass aspect: default;
 			species cows aspect: cow_action_neighbourhood transparency: 0.1;
 			species cows aspect: default;
-			
 		}
-				display "display" {
-					chart "Biomass Ditribution of Grassland" type: series {
-						data "Average Biomass" value: mean_biomass;
-						data "Minimum Biomass" value: min_biomass;
-						data "Maximim Biomass" value: max_biomass;
-					}
-		
-				}
-				display "display_1" {
-					chart "Average Grass Eaten by Cows" type: series {
-						data "Average grass eaten by cow" value: total_grass_eaten/total_cow;
-						
-					}
-		
-				}
-				
-//				display PhasePortrait  {																		 
-//    chart "Lotka Volterra Phase Portrait" type: xy {							
-//        data 'Preys/Predators' value: {first(LotkaVolterra_agent).nb_prey, first(LotkaVolterra_agent).nb_predator} color: #black ;		
-//    }
-//}
-				
-				display "display_2" {
-					chart "Average grass eaten by cow" type: xy {
-						
-						data "Average available Grass per Cell Vs Mean Grass Eaten per Cow" value: {total_available_grass/total_cow,  total_grass_eaten/total_cow};
-//						data "mean grass eaten by cow" value:;
-						
-					}
-		
-				}
-				
+
+		display "chart_1" {
+			chart "Biomass Ditribution of Grassland" type: series {
+				data "Average Biomass" value: mean_biomass marker: false;
+				data "Minimum Biomass" value: min_biomass marker: false;
+				data "Maximim Biomass" value: max_biomass marker: false;
+			}
+
+		}
+
+		display "chart_2" {
+			chart "Average Grass Eaten by Cows" type: series {
+				data "Average grass eaten by cow" value: total_grass_eaten / total_cow color: #blue marker: false;
+			}
+
+		}
+
+		display "chart_3" {
+			chart "Average grass eaten by cow vs average grass available" type: xy background: #white {
+				data "Average available Grass per Cell Vs Mean Grass Eaten per Cow" value: length(available_grass_list) > 0 ?
+				[sum(available_grass_list) / length(available_grass_list), total_grass_eaten / total_cow] : [0, 0] color: #blue;
+			}
+
+		}
 
 	}
 
 }
-
 
 //maximum biomass. max biomass for lower pasture and cutback 2021-23 = 6; for Hirschanger = 4; for cutback 2020 = 7.
 
