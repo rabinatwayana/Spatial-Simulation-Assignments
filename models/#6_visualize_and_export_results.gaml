@@ -15,6 +15,7 @@ global {
 	float mean_biomass;
 	float min_biomass;
 	float max_biomass;
+	grass best_spot;
 
 	// Load geospatial file
 	file vierkaser_file <- file("../includes/grazing_cows/Vierkaser.geojson"); // a polygon file
@@ -157,24 +158,13 @@ species cows skills: [moving] {
 
 	reflex cow_graze {
 		list<grass> my_grasses <- grass intersecting (cow_action_area);
-
-		//		list<float> biomass_values <- [];
-
-		//finding best spot to graze
-		float max_biomass <- 0.0;
-		grass my_grass;
-		loop i over: my_grasses {
-			if max_biomass < i.biomass {
-				my_grass <- i;
-				max_biomass <- i.biomass;
-			}
-
-		}
-
+		best_spot<- (my_grasses with_max_of (each.biomass));
+		do goto target:best_spot;
+		
 		ask my_grasses {
-			if biomass > 0 {
+//		ask (best_spot){
+			if biomass > 0.0 {
 				add biomass to: available_grass_list;
-				//				total_available_grass <- total_available_grass+ biomass;
 				biomass <- biomass - 0.1; //biomass is a grid variable in this example
 				total_grass_eaten <- total_grass_eaten + 0.1;
 			}
@@ -193,7 +183,7 @@ species cows skills: [moving] {
 
 }
 
-grid grass cell_width: 50 cell_height: 50 {
+grid grass cell_width: 5 cell_height: 5 {
 //declare variables
 	float biomass;
 	bool is_pasture <- self intersects (grassland);
@@ -237,19 +227,21 @@ grid grass cell_width: 50 cell_height: 50 {
 experiment main_experiment type: gui {
 
 	reflex save_data {
-		save [cycle, mean_biomass, min_biomass, max_biomass] to: "../results/results.csv" format:"csv" rewrite: false header: true;
+		save [cycle, mean_biomass, min_biomass, max_biomass] to: "../results/results.csv" format: "csv" rewrite: false header: true;
 	}
 
 	output {
 		display map_2d {
+			
 			species vierkher aspect: vierkher_polygon_aspect;
-			species hirschanger aspect: hirschanger_polygon_aspect;
-			species meadow aspect: meadow_polygon_aspect;
-			species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
-			species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
-			species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
-			species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
 			species grass aspect: default;
+//			species hirschanger aspect: hirschanger_polygon_aspect;
+//			species meadow aspect: meadow_polygon_aspect;
+//			species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
+//			species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
+//			species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
+//			species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
+//			
 			species cows aspect: cow_action_neighbourhood transparency: 0.1;
 			species cows aspect: default;
 		}

@@ -11,6 +11,7 @@ global {
 	float total_biomass <- 0.0;
 	int total_grassland_cell <- 0;
 	float mean_biomass;
+	grass best_spot;
 
 	//	float step <- 24*60 #minute;
 	// Load geospatial file
@@ -42,8 +43,7 @@ global {
 		create cows number: 12 {
 			location <- any_location_in(grassland);
 		}
-		
-		
+
 		total_biomass <- 0.0;
 		total_grassland_cell <- 0;
 		loop i over: grass {
@@ -57,7 +57,6 @@ global {
 		}
 
 		mean_biomass <- total_biomass / total_grassland_cell;
-
 	}
 
 	reflex update_mean_biomass_value {
@@ -150,17 +149,18 @@ species cows skills: [moving] {
 	reflex cow_graze {
 		list<grass> my_grasses <- grass intersecting (cow_action_area);
 		list<float> biomass_values <- [];
-		float max_biomass <- 0.0;
-		grass my_grass;
-		loop i over: my_grasses {
-			if max_biomass < i.biomass {
-				my_grass <- i;
-				max_biomass <- i.biomass;
-			}
+		best_spot <- (my_grasses with_max_of (each.biomass));
 
-		}
-
-		ask my_grass {
+		//		float max_biomass <- 0.0;
+		//		grass my_grass;
+		//		loop i over: my_grasses {
+		//			if max_biomass < i.biomass {
+		//				my_grass <- i;
+		//				max_biomass <- i.biomass;
+		//			}
+		//
+		//		}
+		ask best_spot {
 			biomass <- biomass - 0.1; //biomass is a grid variable in this example
 		}
 
@@ -198,21 +198,19 @@ grid grass cell_width: 5 cell_height: 5 {
 			biomass <- 3.0;
 		} else {
 			biomass <- 0.0;
-		}
-	}
+		} }
 
 		//grass growth
 	reflex grow when: is_pasture {
-		if (is_meadow and biomass < 6.1) {
-			write (biomass);
-		}
-
+	//		if (is_meadow and biomass < 6.1) {
+	//			write (biomass);
+	//		}
 		if (is_meadow and biomass < 6.1) or (is_cutback_2020 and biomass < 7.1) or (is_cutback_2021_23 and biomass < 6.1) or (is_hirschanger and biomass < 4.1) {
-			write (biomass);
-			write ("before"); 
+		//			write (biomass);
+		//			write ("before"); 
 			biomass <- biomass + 0.1;
-			write (biomass);
-			write ("after"); 
+			//			write (biomass);
+			//			write ("after"); 
 		}
 
 	}
@@ -223,32 +221,32 @@ grid grass cell_width: 5 cell_height: 5 {
 		} else {
 		//			draw square(5) color: rgb(0, int(biomass * 40), 0) border: rgb(0, int(biomass * 40), 0);
 			draw square(5) color: rgb(0, 255 - int(biomass * 20), 0) border: rgb(0, 255 - int(biomass * 20), 0);
-//			draw square(5) color: rgb(0, 255 - int(60 * 2), 0) border: rgb(0, 255 - int(60 * 2), 0);
+			//			draw square(5) color: rgb(0, 255 - int(60 * 2), 0) border: rgb(0, 255 - int(60 * 2), 0);
 		}
 
 	} }
 
 experiment main_experiment type: gui {
 	output {
-//		display map {
-//					species vierkher aspect: vierkher_polygon_aspect;
-//		//			species hirschanger aspect: hirschanger_polygon_aspect;
-//		//			species meadow aspect: meadow_polygon_aspect;
-//		//			species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
-//		//			species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
-//		//			species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
-//		//			species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
-//			species grass aspect: default;
-//			species cows aspect: cow_action_neighbourhood transparency: 0.1;
-//			species cows aspect: default;
-//			
-//		}
-				display "my_display" {
-					chart "Average Biomass Over Time" type: series {
-						data "Average Biomass" value: mean_biomass;
-					}
-		
-				}
+		display map {
+			species vierkher aspect: vierkher_polygon_aspect;
+			//			species hirschanger aspect: hirschanger_polygon_aspect;
+			//			species meadow aspect: meadow_polygon_aspect;
+			//			species cleaned_2020 aspect: cleaned_2020_polygon_aspect;
+			//			species cleaned_2021 aspect: cleaned_2021_polygon_aspect;
+			//			species cleaned_2022 aspect: cleaned_2022_polygon_aspect;
+			//			species cleaned_2023 aspect: cleaned_2023_polygon_aspect;
+			species grass aspect: default;
+			species cows aspect: cow_action_neighbourhood transparency: 0.1;
+			species cows aspect: default;
+		}
+
+		display "my_display" {
+			chart "Average Biomass Over Time" type: series {
+				data "Average Biomass" value: mean_biomass;
+			}
+
+		}
 
 	}
 
