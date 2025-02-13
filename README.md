@@ -19,3 +19,6 @@ behaviors, analyzing system dynamics, and presenting and exporting results effec
 implementing this knowledge in real world projects.
 
 The code (.gaml) file for each assignment is available under the models folder.
+
+The report for each assignment can be found in Mid_Term_Report file.
+
