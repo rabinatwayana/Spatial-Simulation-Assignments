@@ -18,4 +18,4 @@ These assignments collectively emphasize initializing agents and environments, d
 behaviors, analyzing system dynamics, and presenting and exporting results effectively and
 implementing this knowledge in real world projects.
 
-The code (.gaml) file for each assignment is available under the model folder.
+The code (.gaml) file for each assignment is available under the models folder.
